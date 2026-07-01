@@ -1,0 +1,10 @@
+# Настройки IDE JetBrains (PyCharm / CLion)
+.idea/
+
+# Виртуальное окружение Python
+.venv/
+venv/
+
+# Кэш Python (автоматически создаваемые папки компилятора)
+__pycache__/
+*.pyc
