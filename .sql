@@ -1,3 +1,6 @@
+USE ProjectDB; -- подставьте вашу базу
+GO
+
 -- Очищаем старые таблицы, если они были (в обратном порядке из-за связей)
 
 DROP TABLE IF EXISTS training;
@@ -58,9 +61,9 @@ CREATE TABLE [user] (
 
 INSERT INTO [user] (fio, user_name, phone_number, role_type) VALUES
 
-(N'Алексей Петров (Тренер)', 'alex_coach', '+375291112233', 'coach'),
+(N'Анфиса Синковец (Тренер)', 'anfisa_boss', '+375293555177', 'coach'),
 
-(N'Мария Сидорова (Тренер)', 'maria_fit', '+375332223344', 'coach'),
+(N'Полина Шинкоренко (Тренер)', 'polina_nagibator', '+375445117899', 'coach'),
 
 (N'Иван Иванов (Клиент)', 'vanya_client', '+375445556677', 'user'),
 
@@ -160,9 +163,9 @@ CREATE TABLE training (
 
 INSERT INTO training (user_id_coach, membership_id_client, tr_type_id, day_of_the_week) VALUES
 
-(1, 1, 2, 1),
+(2, 1, 2, 1),
 
-(2, 2, 1, 3);
+(1, 2, 1, 3);
 
 GO
 
@@ -199,3 +202,4 @@ JOIN training_type tt ON t.tr_type_id = tt.tr_type_id
 LEFT JOIN membership m ON t.membership_id_client = m.membership_id
 
 LEFT JOIN [user] u_client ON m.user_id = u_client.user_id;
+
