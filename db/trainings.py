@@ -63,3 +63,51 @@ def delete_by_id(training_id: int) -> bool:
     except pyodbc.Error as e:
         print(f"[DB/Trainings] Ошибка удаления тренировки: {e}")
         return False
+
+def book_training(username: str, tr_type_id: int) -> str:
+    """
+    Записывает пользователя на тренировку с проверкой абонемента и свободных мест.
+    """
+    # 1. Ищем активный абонемент клиента
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT membership_id FROM membership 
+                WHERE user_id = (SELECT user_id FROM [user] WHERE user_name = ?)
+                  AND validity_date >= CAST(GETDATE() AS DATE)
+            """, (username,))
+            res = cursor.fetchone()
+            if not res:
+                return "no_membership"
+            membership_id = res[0]
+
+            # 2. Проверяем свободные места (считаем строго записи для ЭТОЙ тренировки)
+            cursor.execute("""
+                            SELECT 
+                                tt.num_of_places - (SELECT COUNT(*) FROM training WHERE tr_type_id = tt.tr_type_id)
+                            FROM training_type tt
+                            WHERE tt.tr_type_id = ?
+                        """, (tr_type_id,))
+
+            res_places = cursor.fetchone()
+
+            # Защита: если такого ID тренировки вообще нет в справочнике
+            if not res_places:
+                return "no_places"
+
+            free_places = res_places[0]
+
+            if free_places <= 0:
+                return "no_places"
+
+            # 3. Назначаем случайного тренера из базы (для простоты), у которого роль 'coach'
+            cursor.execute("SELECT TOP 1 user_id FROM [user] WHERE role_type = 'coach'")
+            coach_id = cursor.fetchone()[0]
+
+            # 4. Делаем саму запись (день недели поставим 1 - Понедельник для примера)
+            cursor.execute("""
+                INSERT INTO training (user_id_coach, membership_id_client, tr_type_id, day_of_the_week)
+                VALUES (?, ?, ?, 1)
+            """, (coach_id, membership_id, tr_type_id))
+            conn.commit()
+            return "success"
